@@ -1,3 +1,20 @@
+/*
+ * Noxberry theme (Phase 1 MainWindow redesign)
+ *
+ * This is a pure presentation layer.
+ * All colours are derived from the active QPalette via %palette-* tokens
+ * (substituted by StyleSheetLoader), so the theme adapts to the user's
+ * light/dark palette while staying tuned for a modern, dark-first look:
+ * generous radii, consistent padding, card-like surfaces and a clean
+ * typography hierarchy.
+ *
+ * No selector here changes behaviour - only appearance.
+ */
+
+/* ============================================================
+ * Playlist surface (functional selectors - do not remove)
+ * ============================================================ */
+
 #playlist {
   background-color: %palette-base;
   alternate-background-color: %palette-alternate-base;
@@ -35,20 +52,25 @@
   background-color: %palette-base;
 }
 
+/* ============================================================
+ * Player transport buttons (functional selectors preserved,
+ * with softened modern radius/hover)
+ * ============================================================ */
+
 QToolButton[accessibleName="MenuPopupToolButton"] {
   border: 2px solid transparent;
-  border-radius: 3px;
-  padding: 1px;
+  border-radius: 8px;
+  padding: 2px;
 }
 
 QToolButton:hover[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid %palette-highlight;
-  background-color: %palette-highlight-lighter;
+  border: 2px solid transparent;
+  background-color: %palette-alternate-base;
 }
 
 QToolButton:pressed[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid %palette-highlight-darker;
-  background-color: %palette-highlight-lighter;
+  border: 2px solid %palette-highlight;
+  background-color: %palette-alternate-base;
 }
 
 QToolButton[popupMode="MenuButtonPopup"][accessibleName="MenuPopupToolButton"], QToolButton:hover[popupMode="MenuButtonPopup"][accessibleName="MenuPopupToolButton"], QToolButton:pressed[popupMode="MenuButtonPopup"][accessibleName="MenuPopupToolButton"] {
@@ -63,4 +85,327 @@ QToolButton[popupMode="1"][accessibleName="MenuPopupToolButton"], QToolButton:ho
 QToolButton::menu-button[accessibleName="MenuPopupToolButton"] {
   width: 16px;
   border: none;
+}
+
+/* ============================================================
+ * Menu bar
+ * ============================================================ */
+
+QMenuBar {
+  background: transparent;
+  padding: 3px 6px;
+  spacing: 2px;
+}
+
+QMenuBar::item {
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 7px;
+  margin: 0px 1px;
+}
+
+QMenuBar::item:selected,
+QMenuBar::item:pressed {
+  background-color: %palette-alternate-base;
+}
+
+/* ============================================================
+ * Menus (popups - application wide)
+ * ============================================================ */
+
+QMenu {
+  background-color: %palette-window;
+  border: 1px solid %palette-alternate-base;
+  border-radius: 12px;
+  padding: 6px;
+}
+
+QMenu::item {
+  padding: 7px 22px 7px 22px;
+  border-radius: 7px;
+  margin: 1px 2px;
+}
+
+QMenu::item:selected {
+  background-color: %palette-highlight;
+  color: %palette-brighttext;
+}
+
+QMenu::item:disabled {
+  color: %palette-mid;
+}
+
+QMenu::separator {
+  height: 1px;
+  background: %palette-alternate-base;
+  margin: 6px 10px;
+}
+
+QMenu::icon {
+  padding-left: 6px;
+}
+
+QMenu::indicator {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================
+ * Tooltips
+ * ============================================================ */
+
+QToolTip {
+  background-color: %palette-window;
+  color: %palette-text;
+  border: 1px solid %palette-alternate-base;
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+
+/* ============================================================
+ * Scrollbars (slim, rounded, modern)
+ * ============================================================ */
+
+QScrollBar:vertical {
+  background: transparent;
+  width: 12px;
+  margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+  background: %palette-alternate-base;
+  border-radius: 5px;
+  min-height: 32px;
+}
+
+QScrollBar::handle:vertical:hover {
+  background: %palette-mid;
+}
+
+QScrollBar:horizontal {
+  background: transparent;
+  height: 12px;
+  margin: 2px;
+}
+
+QScrollBar::handle:horizontal {
+  background: %palette-alternate-base;
+  border-radius: 5px;
+  min-width: 32px;
+}
+
+QScrollBar::handle:horizontal:hover {
+  background: %palette-mid;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+  width: 0px;
+  height: 0px;
+  background: none;
+  border: none;
+}
+
+QScrollBar::add-page, QScrollBar::sub-page {
+  background: none;
+}
+
+/* ============================================================
+ * Item views (playlist, collection, queue, file browser)
+ * Backgrounds are intentionally left to the per-view rules
+ * above so the playlist background image keeps working.
+ * ============================================================ */
+
+QTreeView, QListView, QTableView {
+  outline: none;
+  border: none;
+}
+
+QTreeView::item, QListView::item {
+  padding: 3px 4px;
+  border-radius: 6px;
+  margin: 1px 2px;
+}
+
+QTreeView::item:hover, QListView::item:hover {
+  background-color: %palette-alternate-base;
+}
+
+QTreeView::item:selected, QListView::item:selected,
+QTreeView::item:selected:active, QListView::item:selected:active {
+  background-color: %palette-highlight;
+  color: %palette-brighttext;
+}
+
+QTreeView::branch:hover {
+  background: transparent;
+}
+
+/* ============================================================
+ * Header views
+ * ============================================================ */
+
+QHeaderView {
+  background: transparent;
+}
+
+QHeaderView::section {
+  background-color: transparent;
+  color: %palette-mid;
+  padding: 6px 8px;
+  border: none;
+  border-bottom: 1px solid %palette-alternate-base;
+  font-weight: bold;
+}
+
+QHeaderView::section:hover {
+  color: %palette-text;
+}
+
+/* ============================================================
+ * Text inputs and combo boxes (search / filter fields)
+ * ============================================================ */
+
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QPlainTextEdit {
+  background-color: %palette-base;
+  border: 1px solid %palette-alternate-base;
+  border-radius: 9px;
+  padding: 5px 10px;
+  selection-background-color: %palette-highlight;
+  selection-color: %palette-brighttext;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QPlainTextEdit:focus {
+  border: 1px solid %palette-highlight;
+}
+
+QComboBox::drop-down {
+  border: none;
+  width: 20px;
+}
+
+QComboBox QAbstractItemView {
+  background-color: %palette-window;
+  border: 1px solid %palette-alternate-base;
+  border-radius: 8px;
+  padding: 4px;
+  selection-background-color: %palette-highlight;
+  selection-color: %palette-brighttext;
+}
+
+/* ============================================================
+ * Push buttons
+ * ============================================================ */
+
+QPushButton {
+  background-color: %palette-button;
+  border: 1px solid %palette-alternate-base;
+  border-radius: 9px;
+  padding: 6px 16px;
+  min-height: 16px;
+}
+
+QPushButton:hover {
+  background-color: %palette-alternate-base;
+  border: 1px solid %palette-highlight;
+}
+
+QPushButton:pressed {
+  background-color: %palette-highlight;
+  color: %palette-brighttext;
+}
+
+QPushButton:default {
+  border: 1px solid %palette-highlight;
+}
+
+QPushButton:disabled {
+  color: %palette-mid;
+}
+
+/* ============================================================
+ * Tab bars (playlist tabs, tabbed sidebar modes)
+ * ============================================================ */
+
+QTabBar::tab {
+  background: transparent;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  margin: 2px 2px;
+  color: %palette-mid;
+}
+
+QTabBar::tab:hover {
+  background-color: %palette-alternate-base;
+  color: %palette-text;
+}
+
+QTabBar::tab:selected {
+  background-color: %palette-alternate-base;
+  color: %palette-text;
+}
+
+QTabWidget::pane {
+  border: none;
+}
+
+/* ============================================================
+ * Splitter handle (subtle, generous hit area)
+ * ============================================================ */
+
+QSplitter::handle {
+  background: transparent;
+}
+
+QSplitter::handle:horizontal {
+  width: 6px;
+}
+
+QSplitter::handle:vertical {
+  height: 6px;
+}
+
+/* ============================================================
+ * Group boxes
+ * ============================================================ */
+
+QGroupBox {
+  border: 1px solid %palette-alternate-base;
+  border-radius: 12px;
+  margin-top: 14px;
+  padding: 10px;
+}
+
+QGroupBox::title {
+  subcontrol-origin: margin;
+  subcontrol-position: top left;
+  left: 12px;
+  padding: 0px 6px;
+  font-weight: bold;
+}
+
+/* ============================================================
+ * Checkboxes / radios spacing
+ * ============================================================ */
+
+QCheckBox, QRadioButton {
+  spacing: 8px;
+  padding: 2px;
+}
+
+/* ============================================================
+ * Progress bars
+ * ============================================================ */
+
+QProgressBar {
+  background-color: %palette-alternate-base;
+  border: none;
+  border-radius: 6px;
+  height: 8px;
+  text-align: center;
+}
+
+QProgressBar::chunk {
+  background-color: %palette-highlight;
+  border-radius: 6px;
 }

@@ -32,6 +32,8 @@
 #include <QMenu>
 #include <QMovie>
 #include <QPainter>
+#include <QPainterPath>
+#include <QRectF>
 #include <QTextDocument>
 #include <QTimeLine>
 #include <QAction>
@@ -58,11 +60,15 @@ constexpr char kAboveStatusBar[] = "above_status_bar";
 constexpr int kPadding = 2;
 
 // Maximum height of the cover in large mode, and offset between the bottom of the cover and bottom of the widget
-constexpr int kMaxCoverSize = 260;
+constexpr int kMaxCoverSize = 300;
 constexpr int kBottomOffset = 0;
 
 // Border for large mode
 constexpr int kTopBorder = 4;
+
+// Corner radius used when drawing the album cover
+constexpr int kCoverRadiusLarge = 12;
+constexpr int kCoverRadiusSmall = 6;
 
 }  // namespace
 
@@ -120,8 +126,8 @@ PlayingWidget::PlayingWidget(QWidget *parent)
   details_->setUndoRedoEnabled(false);
   // add placeholder text to get the correct height
   if (mode_ == Mode::LargeSongDetails) {
-    details_->setDefaultStyleSheet(u"p { font-size: small; font-weight: bold; }"_s);
-    details_->setHtml(u"<p align=center><i></i><br/><br/></p>"_s);
+    details_->setDefaultStyleSheet(u".title { font-size: large; font-weight: bold; } .artist { font-size: small; } .album { font-size: small; }"_s);
+    details_->setHtml(u"<p align=center><span class=\"title\"></span><br/><br/></p>"_s);
   }
 
   UpdateHeight();
@@ -403,19 +409,20 @@ void PlayingWidget::UpdateHeight() {
 void PlayingWidget::UpdateDetailsText() {
 
   QString html;
-  details_->setDefaultStyleSheet(u"p { font-size: small; font-weight: bold; }"_s);
   switch (mode_) {
     case Mode::SmallSongDetails:
+      details_->setDefaultStyleSheet(u".title { font-weight: bold; } .artist { font-size: small; } .album { font-size: small; font-style: italic; }"_s);
       details_->setTextWidth(-1);
       html += "<p>"_L1;
       break;
     case Mode::LargeSongDetails:
+      details_->setDefaultStyleSheet(u".title { font-size: large; font-weight: bold; } .artist { font-size: small; } .album { font-size: small; font-style: italic; }"_s);
       details_->setTextWidth(desired_height_);
       html += "<p align=center>"_L1;
       break;
   }
 
-  html += QStringLiteral("%1<br/>%2<br/>%3").arg(song_.PrettyTitle().toHtmlEscaped(), song_.artist().toHtmlEscaped(), song_.album().toHtmlEscaped());
+  html += QStringLiteral("<span class=\"title\">%1</span><br/><span class=\"artist\">%2</span><br/><span class=\"album\">%3</span>").arg(song_.PrettyTitle().toHtmlEscaped(), song_.artist().toHtmlEscaped(), song_.album().toHtmlEscaped());
   html += "</p>"_L1;
 
   details_->setHtml(html);
@@ -449,8 +456,16 @@ void PlayingWidget::DrawContents(QPainter *p) {
 
   switch (mode_) {
     case Mode::SmallSongDetails:
-      // Draw the cover
-      p->drawPixmap(0, 0, small_ideal_height_, small_ideal_height_, pixmap_cover_);
+      // Draw the cover with rounded corners
+      if (!pixmap_cover_.isNull()) {
+        p->save();
+        p->setRenderHint(QPainter::Antialiasing);
+        QPainterPath path;
+        path.addRoundedRect(QRectF(0, 0, small_ideal_height_, small_ideal_height_), kCoverRadiusSmall, kCoverRadiusSmall);
+        p->setClipPath(path);
+        p->drawPixmap(0, 0, small_ideal_height_, small_ideal_height_, pixmap_cover_);
+        p->restore();
+      }
       if (downloading_covers_ && spinner_animation_) {
         p->drawPixmap(small_ideal_height_ - 18, 6, 16, 16, spinner_animation_->currentPixmap());
       }
@@ -467,8 +482,16 @@ void PlayingWidget::DrawContents(QPainter *p) {
       const int cover_size = fit_width_ ? width() : qMin(kMaxCoverSize, width());
       const int x_offset = (width() - desired_height_) / 2;
 
-      // Draw the cover
-      p->drawPixmap(x_offset, kTopBorder, cover_size, cover_size, pixmap_cover_);
+      // Draw the cover with rounded corners
+      if (!pixmap_cover_.isNull()) {
+        p->save();
+        p->setRenderHint(QPainter::Antialiasing);
+        QPainterPath path;
+        path.addRoundedRect(QRectF(x_offset, kTopBorder, cover_size, cover_size), kCoverRadiusLarge, kCoverRadiusLarge);
+        p->setClipPath(path);
+        p->drawPixmap(x_offset, kTopBorder, cover_size, cover_size, pixmap_cover_);
+        p->restore();
+      }
       if (downloading_covers_ && spinner_animation_) {
         p->drawPixmap(x_offset + 45, 35, 16, 16, spinner_animation_->currentPixmap());
       }
