@@ -7,7 +7,7 @@
   <provides>
     <binary>strawberry</binary>
   </provides>
-  <name>Strawberry Music Player</name>
+  <name>NoxBerry</name>
   <summary>A music player and collection organizer</summary>
   <url type="homepage">https://www.strawberrymusicplayer.org/</url>
   <url type="bugtracker">https://github.com/strawberrymusicplayer/strawberry/issues</url>

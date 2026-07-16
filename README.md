@@ -1,140 +1,217 @@
-# :strawberry: Strawberry Music Player [![Build Status](https://github.com/strawberrymusicplayer/strawberry/actions/workflows/build.yaml/badge.svg?branch=master)](https://github.com/strawberrymusicplayer/strawberry/actions)
-[![Sponsor](https://img.shields.io/badge/-Sponsor-green?logo=github)](https://github.com/sponsors/jonaski)
-[![Patreon](https://img.shields.io/badge/patreon-donate-green.svg)](https://patreon.com/jonaskvinge)
-[![PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/jonaskvinge)
+<div align="center">
 
-Strawberry is a **music player and music collection organizer**, originally forked from *Clementine* in 2018.
-It’s written in **C++ using the Qt framework**, designed for **audiophiles and music collectors**.
+<img src="data/icons/128x128/strawberry.png" width="120" alt="NoxBerry">
 
-![Screenshot of Strawberry Music Player](https://raw.githubusercontent.com/strawberrymusicplayer/strawberry/master/data/screenshot/screenshot.png)
+# NoxBerry
+
+**A music player for people who care about their collection — rebuilt around a modern interface.**
+
+A personal fork of [Strawberry](https://github.com/strawberrymusicplayer/strawberry) (itself a fork of *Clementine*).
+C++17 · Qt 6 · GStreamer
+
+</div>
 
 ---
 
-## :globe_with_meridians: Resources
+## :crystal_ball: What this fork is trying to achieve
 
+Strawberry is an outstanding music player. Its feature depth — bit-perfect playback,
+tag editing, ReplayGain/EBU R128, device sync, transcoding — is genuinely hard to
+find anywhere else, and none of that is in question here.
+
+What it *doesn't* have is a modern interface. The UI still carries a lot of its
+Clementine/Amarok lineage: glossy gradients, dense spacing, small artwork, and a
+sidebar that looks like it belongs to a different decade.
+
+**NoxBerry keeps every bit of Strawberry's power and gives it the interface that
+power deserves.** The target is the visual quality of Spotify, Apple Music, Arc and
+Zen — without giving up a single feature to get there.
+
+A second, longer-term goal: **make the collection smarter**. Strawberry knows what's
+in your library; it doesn't know that a track also exists on YouTube and Spotify, or
+that it belongs on a late-night playlist. That's the second half of this fork.
+
+### Design goals
+
+| | |
+| --- | --- |
+| **Modern desktop feel** | Quality on par with Spotify, Apple Music, Arc, Zen |
+| **Space & rhythm** | Clean spacing, consistent padding, rounded corners |
+| **Navigation** | A real, modern sidebar |
+| **Content-first** | Card-based layouts, large album artwork |
+| **Hierarchy** | Typography that tells you what matters |
+| **Adaptability** | Responsive layouts, light/dark aware |
+| **Key surfaces** | A better queue panel and a better Now Playing |
+
+### The rule that makes this safe
+
+> **The UI changes. The app does not.**
+
+Every redesign phase holds to this:
+
+- No changes to playback, database, playlist or application behaviour.
+- All signals, slots, actions, shortcuts and menus keep working.
+- Nothing is removed; the architecture is preserved.
+- Presentation stays separated from business logic — the QSS theme first, then
+  light `.ui` tweaks, then presentation-only paint code. Playback code is not touched.
+
+This is a fork of a mature, working application. A redesign that breaks it is a
+failure, no matter how good it looks.
+
+---
+
+## :art: Identity
+
+NoxBerry is a **user-facing rename only**, and that distinction is deliberate.
+
+- **Renamed:** window title, application display name, About dialog, app icon,
+  launcher entry.
+- **Deliberately NOT renamed:** the binary name, config directory, collection
+  database, MPRIS D-Bus service, `.desktop` id, and every class name in the source.
+
+Why: renaming those breaks config continuity, desktop integration and IPC, and buys
+nothing visually. It also keeps the diff against upstream small enough to keep
+merging their work.
+
+**Accent colour — Berry Violet `#7c3aed`** (nox = night, plus berry). Neutral
+surfaces still follow your system palette; only the accent is fixed, so the app
+stays adaptive while keeping an identity.
+
+---
+
+## :white_check_mark: Status
+
+### Done
+
+**Phase 1 — Theme**
+- A palette-aware, dark-first QSS theme: rounded menus, inputs and cards, slim
+  scrollbars, consistent padding throughout.
+- Now Playing: larger artwork (300px), rounded cover corners, real typography
+  hierarchy.
+- Tidier queue and player-control spacing.
+
+**Phase 2 — Branding & sidebar**
+- NoxBerry identity: title, display name, About dialog, launcher entry.
+- New icon — a violet berry with a night ("nox") crescent and leafy crown.
+- Berry Violet accent across selection, focus, pressed and progress surfaces.
+- Sidebar: the glossy white active gradient is gone, replaced with a rounded violet
+  pill and a bright label. The sidebar background is now a neutral panel colour
+  instead of the saturated system highlight.
+
+### Next — Phase 3: Layout
+
+Where the biggest visual wins are. Each is a separate, reviewable slice:
+
+- **Album browser** — card grid, large artwork, proper hover affordances
+- **Now Playing** — richer layout, bigger art, clearer metadata
+- **Queue** — better rows, drag affordance, clear now-playing marker
+- **Search** — modern field, grouped results, real empty states
+- **Statistics** — an actual view instead of plain text
+
+These need presentation-only item delegates and custom paint work. Models, queries
+and behaviour still stay untouched.
+
+### Later — A smarter collection
+
+Genuinely new features. These relax the "UI only" rule and get their own design pass:
+
+- **Enriched track data** — a PostgreSQL side database seeded from a spreadsheet,
+  carrying extra columns such as **YouTube URL** and **Spotify URL** for the same
+  song, joined to the existing SQLite collection without disturbing it.
+- **Mood / genre playlists** — auto playlists driven by that enriched data.
+- **Plugins** — deeper Last.fm integration and similar.
+
+See [ROADMAP.md](ROADMAP.md) for the full plan and the locked-in decisions.
+
+---
+
+## :rocket: Running it
+
+> **The command is `strawberry`, not `noxberry`.**
+> The binary name is one of the internal identifiers this fork intentionally keeps.
+> In your application launcher it appears as **NoxBerry**.
+
+```bash
+strawberry
+```
+
+## :wrench: Build from source
+
+```bash
+git clone --recursive https://github.com/MoKaif/noxberry
+cd noxberry
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel $(nproc)
+sudo cmake --install build          # installs to /usr/local
+```
+
+> **Use `-DCMAKE_BUILD_TYPE=Release` for a build you actually use.** This project
+> does not default a build type, and an unset one produces **no optimisation flags at
+> all**. `Release` also disables debug-output spam.
+
+Developed and tested on **Linux** (Arch). The fork's changes are UI-level, so upstream's
+BSD/macOS/Windows support should carry over — but it isn't tested here.
+
+### Requirements
+
+**Core:** CMake 3.13+ · a C++17 compiler · pkg-config · Boost · GLib · Qt 6.4+ (Core,
+Concurrent, Gui, Widgets, Network, SQL, D-Bus) · SQLite 3.9+ · ALSA (Linux) ·
+GStreamer · TagLib 1.12+ · ICU · [KDSingleApplication](https://github.com/KDAB/KDSingleApplication) 1.1.0+
+
+**Optional:** Chromaprint (fingerprinting) · FFTW3 (fast spectrum moodbar) ·
+PulseAudio · libcdio (audio CD) · libmtp (MTP devices) · libgpod (iPod Classic) ·
+libebur128 (EBU R128 normalization)
+
+Also install GStreamer plugins **base**, **good**, and optionally **bad**, **ugly**
+and **libav** for full codec support.
+
+### Regenerating the icon
+
+Master SVGs live in `data/icons/svg/`. See [ROADMAP.md](ROADMAP.md#regenerating-the-icon).
+
+---
+
+## :white_check_mark: Inherited features
+
+Everything Strawberry does, NoxBerry does — this fork removes nothing:
+
+- Play and organize your music collection
+- WAV, FLAC, Ogg FLAC, WavPack, Ogg Vorbis, Opus, Ogg Speex, MPC, TrueAudio, AIFF,
+  MP4/AAC, ALAC, MP3, ASF, Monkey's Audio, and DSD (DSF/DSDIFF)
+- Bit-perfect playback on Linux
+- MPRIS2 / D-Bus remote control, native desktop notifications, global shortcuts
+- Advanced playlist management, smart and dynamic playlists
+- Audio analyzer, equalizer, moodbar, and waveform seek bar
+- ReplayGain and EBU R128 loudness normalization
+- Tag editing, and missing tags via [AcoustID](https://acoustid.org/) / [MusicBrainz](https://musicbrainz.org/)
+- Cover art and lyrics from a wide range of providers
+- Transcoding, USB/MTP/iPod transfer, audio CD playback
+- Scrobbling to [Last.fm](https://www.last.fm/), [ListenBrainz](https://listenbrainz.org/), Subsonic
+- Internet radio, Subsonic streaming, unofficial Tidal/Spotify/Qobuz integration
+- Discord Rich Presence
+
+---
+
+## :heart: Upstream
+
+NoxBerry exists because Strawberry is worth building on. All of the hard engineering
+underneath this fork is the work of **Jonas Kvinge** and the Strawberry and Clementine
+contributors.
+
+If you find NoxBerry useful, **support upstream** — that's where the real work happens:
+
+[Patreon](https://www.patreon.com/jonaskvinge) · [GitHub Sponsors](https://github.com/sponsors/jonaski) · [Ko-fi](https://ko-fi.com/jonaskvinge) · [PayPal](https://paypal.me/jonaskvinge)
+
+- **Upstream repo:** https://github.com/strawberrymusicplayer/strawberry
 - **Website:** https://www.strawberrymusicplayer.org
 - **Wiki:** https://wiki.strawberrymusicplayer.org
 - **Forum:** https://forum.strawberrymusicplayer.org
-- **GitHub:** https://github.com/strawberrymusicplayer/strawberry
-- **Latest builds:** https://builds.strawberrymusicplayer.org
-- **openSUSE Build Service:**
-  - Stable: https://build.opensuse.org/package/show/home:jonaski:strawberry/strawberry
-  - Unstable: https://build.opensuse.org/package/show/home:jonaski:strawberry-dev/strawberry
-- **Ubuntu PPAs:**
-  - Stable: https://launchpad.net/~jonaski/+archive/ubuntu/strawberry
-  - Unstable: https://launchpad.net/~jonaski/+archive/ubuntu/strawberry-unstable
-- **Translations:** https://crowdin.com/project/strawberrymusicplayer
+
+> **Please don't report NoxBerry issues to upstream.** This is an unaffiliated personal
+> fork. Anything broken here is this fork's problem, not theirs.
 
 ---
 
-## :warning: Opening an Issue
+## :page_facing_up: License
 
-Before creating a new GitHub issue:
-
-1. **Read the [FAQ](https://wiki.strawberrymusicplayer.org/wiki/FAQ)**.
-2. **Search existing issues** to avoid duplicates. If one already exists, comment there with any additional information.
-3. **Use the [forum](https://forum.strawberrymusicplayer.org/)** for technical problems, discussions or feature suggestions — it’s better suited for back-and-forth conversation.
-4. **Feature requests are not accepted on GitHub.** Issues created for feature requests will be closed. You can still discuss ideas on the forum.
-5. **Flatpak users:** We do **not** maintain the Flatpak package. Report Flatpak-specific issues via [Flatpak support](https://flatpak.org/about/).
-
----
-
-## :moneybag: Sponsoring
-
-Strawberry is **free software released under the GPL**.
-If you enjoy using it, please consider **supporting development** through sponsorship or donation.
-
-**Sponsorship options:**
-1. [Patreon](https://www.patreon.com/jonaskvinge)
-2. [GitHub](https://github.com/sponsors/jonaski)
-3. [Ko-fi](https://ko-fi.com/jonaskvinge)
-4. [PayPal](https://paypal.me/jonaskvinge)
-
-Supporting open-source developers helps ensure continued maintenance and improvements.
-
----
-
-## :white_check_mark: Features
-
-- Play and organize your music collection
-- Support for WAV, FLAC, Ogg FLAC, WavPack, Ogg Vorbis, Opus, Ogg Speex, MPC, TrueAudio, AIFF, MP4/AAC, ALAC, MP3, ASF, Monkey’s Audio, and DSD (DSF/DSDIFF)
-- Bit-perfect playback on Linux
-- MPRIS2 / D-Bus remote control on Linux
-- Native desktop notifications
-- Advanced playlist management
-- Smart and dynamic playlists
-- Audio analyzer, equalizer, moodbar, and waveform seek bar
-- Volume normalization with ReplayGain and EBU R128 loudness analysis
-- Editing tags, and fetching missing tags via acoustic fingerprinting using [AcoustID](https://acoustid.org/) and [MusicBrainz](https://musicbrainz.org/)
-- Album cover art from: [Last.fm](https://www.last.fm/), [MusicBrainz](https://musicbrainz.org/), [Discogs](https://www.discogs.com/), [Musixmatch](https://www.musixmatch.com/), [Deezer](https://www.deezer.com/), [Tidal](https://www.tidal.com/), [Qobuz](https://www.qobuz.com/), [Spotify](https://www.spotify.com/)
-- Lyrics from: [Genius](https://genius.com/), [Musixmatch](https://www.musixmatch.com/), [lyrics.ovh](https://lyrics.ovh/), [songlyrics](https://www.songlyrics.com/), [azlyrics](https://www.azlyrics.com/), [elyrics](https://www.elyrics.net/), [letras](https://www.letras.mus.br) and [lrclib.net](https://lrclib.net/)
-- Audio format conversion (transcoding) to MP3, AAC, FLAC, Ogg Vorbis, Opus, Speex, WavPack, and ASF
-- Music transfer to USB, MTP and iPod devices
-- Scrobbling to [Last.fm](https://www.last.fm/), [ListenBrainz](https://listenbrainz.org/), and Subsonic
-- Global keyboard shortcuts (Linux, macOS, and Windows)
-- Discord Rich Presence
-- Audio CD playback
-- Internet radio from [Radio Paradise](https://radioparadise.com/), [SomaFM](https://somafm.com/), [Radio Browser](https://www.radio-browser.info/), and custom streams
-- Streaming from Subsonic-compatible servers
-- Unofficial Tidal, Spotify, and Qobuz integration
-
----
-
-:white_check_mark: Tested on **Linux**, **OpenBSD**, **FreeBSD**, **macOS**, and **Windows**.
-
-> **Note:** macOS and Windows releases are currently **available to sponsors only**.
-> A monthly sponsorship via [Patreon](https://www.patreon.com/jonaskvinge) grants direct access to new releases.
-
----
-
-## :gear: Requirements
-
-To build Strawberry from source, you’ll need:
-
-**Dependencies:**
-- [CMake 3.13 or higher](https://cmake.org/)
-- C/C++ compiler ([GCC](https://gcc.gnu.org/), [Clang](https://clang.llvm.org/), or [MSVC](https://visualstudio.microsoft.com/vs/features/cplusplus/))
-- [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) or [pkgconf](https://github.com/pkgconf/pkgconf)
-- [Boost](https://www.boost.org/)
-- [GLib](https://developer.gnome.org/glib/)
-- [Qt 6.4 or higher](https://www.qt.io/) (Core, Concurrent, Gui, Widgets, Network, SQL, D-Bus)
-- [SQLite 3.9 or higher](https://www.sqlite.org)
-- [ALSA (Linux only)](https://www.alsa-project.org/)
-- [GStreamer](https://gstreamer.freedesktop.org/)
-- [TagLib 1.12 or higher](https://www.taglib.org/)
-- [ICU](https://unicode-org.github.io/icu/)
-- [KDSingleApplication 1.1.0 or higher](https://github.com/KDAB/KDSingleApplication)
-
-**Dependencies for optional features:**
-- Fingerprinting & tagging: [Chromaprint](https://acoustid.org/chromaprint)
-- Fast Spectrum Moodbar: [FFTW3](http://www.fftw.org/)
-- PulseAudio integration: [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/)
-- Audio CD support: [libcdio](https://www.gnu.org/software/libcdio/)
-- MTP devices: [libmtp](http://libmtp.sourceforge.net/)
-- iPod Classic: [libgpod](http://www.gtkpod.org/libgpod/)
-- EBU R128 normalization: [libebur128](https://github.com/jiixyj/libebur128)
-
-Also install GStreamer plugins **base**, **good**, and optionally **bad**, **ugly** and **libav** for full codec support.
-
----
-
-## :wrench: Build from Source
-
-**Get the code:**
-
-    git clone --recursive https://github.com/strawberrymusicplayer/strawberry
-
-**Build and install:**
-
-    cd strawberry
-    cmake -S . -B build
-    cmake --build build --parallel $(nproc)
-    sudo cmake --install build
-
-For building on Windows with Visual Studio 2022, see: :point_right: https://github.com/strawberrymusicplayer/strawberry-msvc-build-tools
-
----
-
-## :package: Packaging status
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/strawberry.svg?columns=3&header=Strawberry&exclude_unsupported=1)](https://repology.org/metapackage/strawberry/versions)
+GPL-3.0-or-later, same as Strawberry. See [COPYING](COPYING).
