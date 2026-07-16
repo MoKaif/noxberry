@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="berry" x1="120" y1="150" x2="400" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="0.45" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#5b21b6"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="200" y1="70" x2="312" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c4b5fd"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.34" cy="0.32" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Berry body: wider at the top, softly pointed at the bottom -->
+  <path d="M256 150
+           C 356 150, 424 214, 424 312
+           C 424 424, 344 474, 256 474
+           C 168 474, 88 424, 88 312
+           C 88 214, 156 150, 256 150 Z"
+        fill="url(#berry)"/>
+
+  <!-- Soft light sheen (upper-left) -->
+  <path d="M256 150
+           C 356 150, 424 214, 424 312
+           C 424 424, 344 474, 256 474
+           C 168 474, 88 424, 88 312
+           C 88 214, 156 150, 256 150 Z"
+        fill="url(#sheen)"/>
+
+  <!-- Nox crescent: a night-moon carved into the sheen on the upper-left -->
+  <path d="M150 250
+           A 78 78 0 1 0 246 346
+           A 96 96 0 1 1 150 250 Z"
+        fill="#ffffff" fill-opacity="0.22"/>
+
+  <!-- Seeds -->
+  <g fill="#ede9fe" fill-opacity="0.85">
+    <ellipse cx="200" cy="330" rx="7" ry="11" transform="rotate(-18 200 330)"/>
+    <ellipse cx="262" cy="300" rx="7" ry="11" transform="rotate(6 262 300)"/>
+    <ellipse cx="318" cy="342" rx="7" ry="11" transform="rotate(20 318 342)"/>
+    <ellipse cx="228" cy="392" rx="7" ry="11" transform="rotate(-8 228 392)"/>
+    <ellipse cx="300" cy="404" rx="7" ry="11" transform="rotate(14 300 404)"/>
+    <ellipse cx="352" cy="288" rx="6" ry="10" transform="rotate(28 352 288)"/>
+  </g>
+
+  <!-- Leafy crown -->
+  <g fill="url(#leaf)">
+    <path d="M256 168 C 236 150, 214 118, 208 86 C 240 96, 262 120, 272 150 Z"/>
+    <path d="M256 168 C 276 150, 298 118, 304 86 C 272 96, 250 120, 240 150 Z"/>
+    <path d="M256 172 C 246 150, 246 112, 256 84 C 266 112, 266 150, 256 172 Z"/>
+  </g>
+  <!-- Stem -->
+  <path d="M250 96 C 252 74, 258 60, 268 48" stroke="#6d28d9" stroke-width="12" stroke-linecap="round" fill="none"/>
+</svg>
