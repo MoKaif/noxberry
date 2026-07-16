@@ -25,6 +25,8 @@
 #include <QtGlobal>
 #include <QObject>
 #include <QWidget>
+#include <QGuiApplication>
+#include <QPalette>
 #include <QTimer>
 #include <QVariant>
 #include <QString>
@@ -418,9 +420,16 @@ void FancyTabWidget::contextMenuEvent(QContextMenuEvent *e) {
 
 QColor FancyTabWidget::DefaultTabbarBgColor() {
 
-  QColor color = StyleHelper::highlightColor();
+  // A neutral sidebar surface derived from the window colour and offset so the
+  // sidebar reads as a distinct panel (darker on dark themes, Spotify-style).
+  // The active item is highlighted with the NoxBerry accent in FancyTabBar, so
+  // the sidebar background itself stays deliberately neutral.
+  QColor color = QGuiApplication::palette().color(QPalette::Window);
   if (Utilities::IsColorDark(color)) {
-    color = color.lighter(130);
+    color = color.darker(115);
+  }
+  else {
+    color = color.darker(108);
   }
   return color;
 

@@ -31,6 +31,9 @@
 #include <QLinearGradient>
 #include <QColor>
 #include <QPen>
+#include <QBrush>
+#include <QRectF>
+#include <QPainterPath>
 
 #include "core/stylehelper.h"
 #include "fancytabbar.h"
@@ -41,6 +44,15 @@ using namespace Qt::Literals::StringLiterals;
 
 namespace {
 constexpr int TabSize_LargeSidebarMinWidth = 70;
+
+// NoxBerry brand accent for the active sidebar item.
+const QColor kSidebarAccent(124, 58, 237);        // Berry Violet #7c3aed
+const QColor kSidebarHover(255, 255, 255, 20);     // subtle translucent hover
+
+// Rounded selection pill geometry.
+constexpr int kPillRadius = 8;
+constexpr int kPillInsetX = 6;
+constexpr int kPillInsetY = 3;
 }  // namespace
 
 FancyTabBar::FancyTabBar(QWidget *parent)
@@ -171,49 +183,20 @@ void FancyTabBar::paintEvent(QPaintEvent *pe) {
   const bool vertical_text_tabs = tabWidget->mode() == FancyTabWidget::Mode::SmallSidebar;
 
   QStylePainter p(this);
+  p.setRenderHint(QPainter::Antialiasing, true);
 
   for (int index = 0; index < count(); ++index) {
     const bool selected = tabWidget->currentIndex() == index;
     QRect tabrect = tabRect(index);
     QRect selectionRect = tabrect;
-    if (selected) {
-      // Selection highlight
+
+    // Rounded selection / hover pill.
+    if (selected || (index == mouseHoverTabIndex && isTabEnabled(index))) {
       p.save();
-      QLinearGradient grad(selectionRect.topLeft(), selectionRect.topRight());
-      grad.setColorAt(0, QColor(255, 255, 255, 140));
-      grad.setColorAt(1, QColor(255, 255, 255, 210));
-      p.fillRect(selectionRect.adjusted(0, 0, 0, -1), grad);
-      p.restore();
-
-      // shadow lines
-      p.setPen(QColor(0, 0, 0, 110));
-      p.drawLine(selectionRect.topLeft()    + QPoint(1, -1), selectionRect.topRight()    - QPoint(0, 1));
-      p.drawLine(selectionRect.bottomLeft(), selectionRect.bottomRight());
-      p.setPen(QColor(0, 0, 0, 40));
-      p.drawLine(selectionRect.topLeft(),    selectionRect.bottomLeft());
-
-      // highlights
-      p.setPen(QColor(255, 255, 255, 50));
-      p.drawLine(selectionRect.topLeft()    + QPoint(0, -2), selectionRect.topRight()    - QPoint(0, 2));
-      p.drawLine(selectionRect.bottomLeft() + QPoint(0, 1),  selectionRect.bottomRight() + QPoint(0, 1));
-      p.setPen(QColor(255, 255, 255, 40));
-      p.drawLine(selectionRect.topLeft()    + QPoint(0, 0),  selectionRect.topRight());
-      p.drawLine(selectionRect.topRight()   + QPoint(0, 1),  selectionRect.bottomRight() - QPoint(0, 1));
-      p.drawLine(selectionRect.bottomLeft() + QPoint(0, -1), selectionRect.bottomRight() - QPoint(0, 1));
-
-    }
-
-    // Mouse hover effect
-    if (!selected && index == mouseHoverTabIndex && isTabEnabled(index)) {
-      p.save();
-      QLinearGradient grad(selectionRect.topLeft(),  selectionRect.topRight());
-      grad.setColorAt(0, Qt::transparent);
-      grad.setColorAt(0.5, QColor(255, 255, 255, 40));
-      grad.setColorAt(1, Qt::transparent);
-      p.fillRect(selectionRect, grad);
-      p.setPen(QPen(grad, 1.0));
-      p.drawLine(selectionRect.topLeft(),     selectionRect.topRight());
-      p.drawLine(selectionRect.bottomRight(), selectionRect.bottomLeft());
+      const QRectF pill = QRectF(selectionRect).adjusted(kPillInsetX, kPillInsetY, -kPillInsetX, -kPillInsetY);
+      QPainterPath path;
+      path.addRoundedRect(pill, kPillRadius, kPillRadius);
+      p.fillPath(path, selected ? QBrush(kSidebarAccent) : QBrush(kSidebarHover));
       p.restore();
     }
 
@@ -255,14 +238,14 @@ void FancyTabBar::paintEvent(QPaintEvent *pe) {
       boldFont.setBold(true);
       p.setFont(boldFont);
 
-      // Text drop shadow color
-      p.setPen(selected ? QColor(255, 255, 255, 160) : QColor(0, 0, 0, 110));
+      // Text drop shadow color (subtle depth under the label).
+      p.setPen(QColor(0, 0, 0, selected ? 70 : 50));
       p.translate(0, 3);
       p.drawText(tabrectText, textFlags, TabText(index));
 
-      // Text foreground color
+      // Text foreground color: bright white on the accent pill, panel text otherwise.
       p.translate(0, -1);
-      p.setPen(selected ? QColor(60, 60, 60) : StyleHelper::panelTextColor());
+      p.setPen(selected ? QColor(255, 255, 255) : StyleHelper::panelTextColor());
       p.drawText(tabrectText, textFlags, TabText(index));
 
 

@@ -42,7 +42,7 @@ About::About(QWidget *parent) : QDialog(parent), ui_{} {
 
   ui_.setupUi(this);
   setWindowFlags(windowFlags()|Qt::WindowStaysOnTopHint);
-  setWindowTitle(tr("About Strawberry"));
+  setWindowTitle(tr("About NoxBerry"));
 
   strawberry_authors_ \
            << Person(u"Jonas Kvinge"_s);
@@ -113,21 +113,21 @@ QString About::MainHtml() const {
   ret += "</p>"_L1;
 
   ret += "<p>"_L1;
-  ret += tr("Strawberry is a music player and music collection organizer.");
+  ret += tr("NoxBerry is a music player and music collection organizer.");
   ret += "<br />"_L1;
-  ret += tr("It is a fork of Clementine released in 2018 aimed at music collectors and audiophiles.");
+  ret += tr("It is based on Strawberry, itself a fork of Clementine, aimed at music collectors and audiophiles.");
   ret += "</p>"_L1;
 
   ret += "<p>"_L1;
-  ret += tr("Strawberry is free software released under GPL. The source code is available on %1").arg(QStringLiteral("<a style=\"color:%1;\" href=\"https://github.com/strawberrymusicplayer/strawberry\">GitHub</a>.").arg(palette().text().color().name()));
+  ret += tr("NoxBerry is free software released under the GPL. It builds on the work of the Strawberry project by Jonas Kvinge, whose source code is available on %1").arg(QStringLiteral("<a style=\"color:%1;\" href=\"https://github.com/strawberrymusicplayer/strawberry\">GitHub</a>.").arg(palette().text().color().name()));
   ret += "<br />"_L1;
   ret += tr("You should have received a copy of the GNU General Public License along with this program.  If not, see %1").arg(QStringLiteral("<a style=\"color:%1;\" href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>").arg(palette().text().color().name()));
   ret += "</p>"_L1;
 
   ret += "<p>"_L1;
-  ret += tr("If you like Strawberry and can make use of it, consider sponsoring or donating.");
+  ret += tr("NoxBerry stands on the shoulders of Strawberry. If you find it useful, please consider sponsoring or donating to the upstream project.");
   ret += "<br />"_L1;
-  ret += tr("You can sponsor the author on %1 or %2. You can also make a one-time payment through %3.").arg(
+  ret += tr("You can sponsor the Strawberry author on %1 or %2. You can also make a one-time payment through %3.").arg(
     QStringLiteral("<a style=\"color:%1;\" href=\"https://www.patreon.com/jonaskvinge\">Patreon</a>").arg(palette().text().color().name()),
     QStringLiteral("<a style=\"color:%1;\" href=\"https://github.com/sponsors/jonaski\">GitHub</a>").arg(palette().text().color().name()),
     QStringLiteral("<a style=\"color:%1;\" href=\"https://paypal.me/jonaskvinge\">paypal.me/jonaskvinge</a>").arg(palette().text().color().name())

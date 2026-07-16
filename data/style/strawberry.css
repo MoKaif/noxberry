@@ -1,12 +1,16 @@
 /*
- * Noxberry theme (Phase 1 MainWindow redesign)
+ * NoxBerry theme (MainWindow redesign)
  *
  * This is a pure presentation layer.
- * All colours are derived from the active QPalette via %palette-* tokens
- * (substituted by StyleSheetLoader), so the theme adapts to the user's
+ * Neutral surfaces are derived from the active QPalette via %palette-* tokens
+ * (substituted by StyleSheetLoader), so backgrounds adapt to the user's
  * light/dark palette while staying tuned for a modern, dark-first look:
  * generous radii, consistent padding, card-like surfaces and a clean
  * typography hierarchy.
+ *
+ * The brand accent is a fixed Berry Violet (#7c3aed, hover #8b5cf6) applied to
+ * selection, focus, pressed and progress surfaces so NoxBerry keeps a
+ * consistent identity regardless of the system highlight colour.
  *
  * No selector here changes behaviour - only appearance.
  */
@@ -69,7 +73,7 @@ QToolButton:hover[accessibleName="MenuPopupToolButton"] {
 }
 
 QToolButton:pressed[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid %palette-highlight;
+  border: 2px solid #7c3aed;
   background-color: %palette-alternate-base;
 }
 
@@ -127,7 +131,7 @@ QMenu::item {
 }
 
 QMenu::item:selected {
-  background-color: %palette-highlight;
+  background-color: #7c3aed;
   color: %palette-brighttext;
 }
 
@@ -232,7 +236,7 @@ QTreeView::item:hover, QListView::item:hover {
 
 QTreeView::item:selected, QListView::item:selected,
 QTreeView::item:selected:active, QListView::item:selected:active {
-  background-color: %palette-highlight;
+  background-color: #7c3aed;
   color: %palette-brighttext;
 }
 
@@ -270,12 +274,12 @@ QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QPlainTextEdit {
   border: 1px solid %palette-alternate-base;
   border-radius: 9px;
   padding: 5px 10px;
-  selection-background-color: %palette-highlight;
+  selection-background-color: #7c3aed;
   selection-color: %palette-brighttext;
 }
 
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QPlainTextEdit:focus {
-  border: 1px solid %palette-highlight;
+  border: 1px solid #7c3aed;
 }
 
 QComboBox::drop-down {
@@ -288,7 +292,7 @@ QComboBox QAbstractItemView {
   border: 1px solid %palette-alternate-base;
   border-radius: 8px;
   padding: 4px;
-  selection-background-color: %palette-highlight;
+  selection-background-color: #7c3aed;
   selection-color: %palette-brighttext;
 }
 
@@ -306,16 +310,23 @@ QPushButton {
 
 QPushButton:hover {
   background-color: %palette-alternate-base;
-  border: 1px solid %palette-highlight;
+  border: 1px solid #7c3aed;
 }
 
 QPushButton:pressed {
-  background-color: %palette-highlight;
+  background-color: #7c3aed;
   color: %palette-brighttext;
 }
 
 QPushButton:default {
-  border: 1px solid %palette-highlight;
+  background-color: #7c3aed;
+  color: %palette-brighttext;
+  border: 1px solid #7c3aed;
+}
+
+QPushButton:default:hover {
+  background-color: #8b5cf6;
+  border: 1px solid #8b5cf6;
 }
 
 QPushButton:disabled {
@@ -406,6 +417,6 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-  background-color: %palette-highlight;
+  background-color: #7c3aed;
   border-radius: 6px;
 }
