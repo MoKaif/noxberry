@@ -2,6 +2,11 @@ Strawberry Music Player
 =======================
 ChangeLog
 
+Version 1.2.24 (2026.08.16):
+
+  Enhancements:
+    * Added a sleep timer that starts automatically for one hour with each playback session, pauses with playback, and provides preset and custom durations from the Music menu
+
 Version 1.2.23 (2026.07.09):
 
   Bugfixes:

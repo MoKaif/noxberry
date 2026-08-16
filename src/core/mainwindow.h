@@ -44,6 +44,7 @@
 #include <QUrl>
 #include <QImage>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QtEvents>
 
 #include "includes/scoped_ptr.h"
@@ -193,6 +194,10 @@ class MainWindow : public QMainWindow, public PlatformInterface {
   void PlayIndex(const QModelIndex &idx, Playlist::AutoScroll autoscroll);
   void PlaylistDoubleClick(const QModelIndex &idx);
   void StopAfterCurrent();
+  void StartSleepTimer(const int minutes);
+  void StartCustomSleepTimer();
+  void CancelSleepTimer();
+  void SleepTimerExpired();
 
   void SongChanged(const Song &song);
   void VolumeChanged(const uint volume);
@@ -304,6 +309,10 @@ class MainWindow : public QMainWindow, public PlatformInterface {
 
   void SetToggleScrobblingIcon(const bool value);
 
+  void ResumeSleepTimer();
+  void PauseSleepTimer();
+  void UpdateSleepTimerMenu();
+
 #ifdef HAVE_DBUS
   void UpdateTaskbarProgress(const bool visible, const double progress = 0);
 #endif
@@ -399,6 +408,16 @@ class MainWindow : public QMainWindow, public PlatformInterface {
   QTimer *track_position_timer_;
   QTimer *track_slider_timer_;
   QTimer *metadata_queue_timer_;
+  QMenu *sleep_timer_menu_;
+  QAction *sleep_timer_auto_start_action_;
+  QAction *sleep_timer_cancel_action_;
+  QTimer *sleep_timer_;
+  QElapsedTimer sleep_timer_elapsed_;
+  qint64 sleep_timer_remaining_msec_;
+  bool sleep_timer_active_;
+  bool sleep_timer_running_;
+  bool playback_session_active_;
+  bool sleep_timer_auto_start_;
 
   bool keep_running_;
   bool playing_widget_;
