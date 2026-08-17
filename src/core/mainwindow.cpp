@@ -69,6 +69,7 @@
 #include <QTabBar>
 #include <QToolButton>
 #include <QCheckBox>
+#include <QInputDialog>
 #include <QClipboard>
 #include <QShowEvent>
 #include <QCloseEvent>
@@ -403,6 +404,15 @@ MainWindow::MainWindow(Application *app,
       track_position_timer_(new QTimer(this)),
       track_slider_timer_(new QTimer(this)),
       metadata_queue_timer_(new QTimer(this)),
+      sleep_timer_menu_(nullptr),
+      sleep_timer_auto_start_action_(nullptr),
+      sleep_timer_cancel_action_(nullptr),
+      sleep_timer_(new QTimer(this)),
+      sleep_timer_remaining_msec_(0),
+      sleep_timer_active_(false),
+      sleep_timer_running_(false),
+      playback_session_active_(false),
+      sleep_timer_auto_start_(BehaviourSettings::kDefaultSleepTimerAutoStart),
       keep_running_(false),
       playing_widget_(true),
 #ifdef HAVE_DBUS
@@ -484,6 +494,32 @@ MainWindow::MainWindow(Application *app,
   metadata_queue_timer_->setInterval(200ms);  // 200ms between requests to avoid rate limiting
   metadata_queue_timer_->setSingleShot(true);
   QObject::connect(metadata_queue_timer_, &QTimer::timeout, this, &MainWindow::ProcessMetadataQueue);
+
+  sleep_timer_->setSingleShot(true);
+  QObject::connect(sleep_timer_, &QTimer::timeout, this, &MainWindow::SleepTimerExpired);
+
+  sleep_timer_menu_ = new QMenu(tr("Sleep timer"), this);
+  ui_->menu_music->insertMenu(ui_->action_quit, sleep_timer_menu_);
+  ui_->menu_music->insertSeparator(ui_->action_quit);
+
+  sleep_timer_auto_start_action_ = sleep_timer_menu_->addAction(tr("Start automatically (1 hour)"));
+  sleep_timer_auto_start_action_->setCheckable(true);
+  QObject::connect(sleep_timer_auto_start_action_, &QAction::toggled, this, [this](const bool enabled) {
+    sleep_timer_auto_start_ = enabled;
+  });
+  sleep_timer_menu_->addSeparator();
+
+  const QList<int> sleep_timer_presets = {15, 30, 45, 60};
+  for (const int minutes : sleep_timer_presets) {
+    QAction *action = sleep_timer_menu_->addAction(tr("%1 minutes").arg(minutes));
+    QObject::connect(action, &QAction::triggered, this, [this, minutes]() { StartSleepTimer(minutes); });
+  }
+  sleep_timer_menu_->addSeparator();
+  sleep_timer_menu_->addAction(tr("Custom…"), this, &MainWindow::StartCustomSleepTimer);
+  sleep_timer_cancel_action_ = sleep_timer_menu_->addAction(tr("Cancel timer"), this, &MainWindow::CancelSleepTimer);
+  QObject::connect(ui_->menu_music, &QMenu::aboutToShow, this, &MainWindow::UpdateSleepTimerMenu);
+  QObject::connect(sleep_timer_menu_, &QMenu::aboutToShow, this, &MainWindow::UpdateSleepTimerMenu);
+  UpdateSleepTimerMenu();
 
   // Start initializing the player
   qLog(Debug) << "Initializing player";
@@ -1241,7 +1277,10 @@ void MainWindow::ReloadSettings() {
   doubleclick_playmode_ = static_cast<BehaviourSettings::PlayBehaviour>(s.value(BehaviourSettings::kDoubleClickPlayMode, static_cast<int>(BehaviourSettings::kDefaultDoubleClickPlayMode)).toInt());
   doubleclick_playlist_addmode_ = static_cast<BehaviourSettings::PlaylistAddBehaviour>(s.value(BehaviourSettings::kDoubleClickPlaylistAddMode, static_cast<int>(BehaviourSettings::kDefaultDoubleClickPlaylistAddMode)).toInt());
   menu_playmode_ = static_cast<BehaviourSettings::PlayBehaviour>(s.value(BehaviourSettings::kMenuPlayMode, static_cast<int>(BehaviourSettings::kDefaultMenuPlayMode)).toInt());
+  sleep_timer_auto_start_ = s.value(BehaviourSettings::kSleepTimerAutoStart, BehaviourSettings::kDefaultSleepTimerAutoStart).toBool();
   s.endGroup();
+
+  sleep_timer_auto_start_action_->setChecked(sleep_timer_auto_start_);
 
   s.beginGroup(AppearanceSettings::kSettingsGroup);
   int iconsize = s.value(AppearanceSettings::kIconSizePlayControlButtons, AppearanceSettings::kDefaultIconSizePlayControlButtons).toInt();
@@ -1417,6 +1456,10 @@ void MainWindow::SaveSettings() {
   s.setValue(MainWindowSettings::kSearchForCoverAuto, album_cover_choice_controller_->search_cover_auto_action()->isChecked());
   s.endGroup();
 
+  s.beginGroup(BehaviourSettings::kSettingsGroup);
+  s.setValue(BehaviourSettings::kSleepTimerAutoStart, sleep_timer_auto_start_);
+  s.endGroup();
+
 }
 
 void MainWindow::Exit() {
@@ -1495,6 +1538,9 @@ void MainWindow::PlaylistsLoaded() {
 
 void MainWindow::MediaStopped() {
 
+  playback_session_active_ = false;
+  CancelSleepTimer();
+
   setWindowTitle(u"NoxBerry"_s);
 
   ui_->action_stop->setEnabled(false);
@@ -1534,6 +1580,8 @@ void MainWindow::MediaStopped() {
 
 void MainWindow::MediaPaused() {
 
+  PauseSleepTimer();
+
   ui_->action_stop->setEnabled(true);
   ui_->action_stop_after_this_track->setEnabled(true);
   ui_->action_play_pause->setIcon(IconLoader::Load(u"media-playback-start"_s));
@@ -1553,6 +1601,15 @@ void MainWindow::MediaPaused() {
 }
 
 void MainWindow::MediaPlaying() {
+
+  const bool starting_session = !playback_session_active_;
+  playback_session_active_ = true;
+  if (starting_session && sleep_timer_auto_start_ && !sleep_timer_active_) {
+    StartSleepTimer(BehaviourSettings::kDefaultSleepTimerMinutes);
+  }
+  else {
+    ResumeSleepTimer();
+  }
 
   ui_->action_stop->setEnabled(true);
   ui_->action_stop_after_this_track->setEnabled(true);
@@ -1775,6 +1832,108 @@ void MainWindow::ToggleHide() {
 void MainWindow::StopAfterCurrent() {
   app_->playlist_manager()->current()->StopAfter(app_->playlist_manager()->current()->current_row());
   Q_EMIT StopAfterToggled(app_->playlist_manager()->active()->stop_after_current());
+}
+
+void MainWindow::StartSleepTimer(const int minutes) {
+
+  sleep_timer_->stop();
+  sleep_timer_remaining_msec_ = static_cast<qint64>(minutes) * 60 * 1000;
+  sleep_timer_active_ = true;
+  sleep_timer_running_ = false;
+
+  if (app_->player()->GetState() == EngineBase::State::Playing) {
+    ResumeSleepTimer();
+  }
+
+  UpdateSleepTimerMenu();
+
+}
+
+void MainWindow::StartCustomSleepTimer() {
+
+  bool accepted = false;
+  const int minutes = QInputDialog::getInt(this,
+                                           tr("Sleep timer"),
+                                           tr("Stop playback after how many minutes?"),
+                                           BehaviourSettings::kDefaultSleepTimerMinutes,
+                                           1,
+                                           24 * 60,
+                                           1,
+                                           &accepted);
+  if (accepted) {
+    StartSleepTimer(minutes);
+  }
+
+}
+
+void MainWindow::CancelSleepTimer() {
+
+  sleep_timer_->stop();
+  sleep_timer_remaining_msec_ = 0;
+  sleep_timer_active_ = false;
+  sleep_timer_running_ = false;
+  UpdateSleepTimerMenu();
+
+}
+
+void MainWindow::ResumeSleepTimer() {
+
+  if (!sleep_timer_active_ || sleep_timer_running_) return;
+
+  if (sleep_timer_remaining_msec_ <= 0) {
+    SleepTimerExpired();
+    return;
+  }
+
+  sleep_timer_elapsed_.restart();
+  sleep_timer_->start(static_cast<int>(sleep_timer_remaining_msec_));
+  sleep_timer_running_ = true;
+  UpdateSleepTimerMenu();
+
+}
+
+void MainWindow::PauseSleepTimer() {
+
+  if (!sleep_timer_active_ || !sleep_timer_running_) return;
+
+  sleep_timer_remaining_msec_ = std::max<qint64>(0, sleep_timer_remaining_msec_ - sleep_timer_elapsed_.elapsed());
+  sleep_timer_->stop();
+  sleep_timer_running_ = false;
+  UpdateSleepTimerMenu();
+
+}
+
+void MainWindow::SleepTimerExpired() {
+
+  sleep_timer_active_ = false;
+  sleep_timer_running_ = false;
+  sleep_timer_remaining_msec_ = 0;
+  UpdateSleepTimerMenu();
+  app_->player()->Stop();
+
+}
+
+void MainWindow::UpdateSleepTimerMenu() {
+
+  sleep_timer_cancel_action_->setEnabled(sleep_timer_active_);
+
+  if (!sleep_timer_active_) {
+    sleep_timer_menu_->setTitle(tr("Sleep timer"));
+    return;
+  }
+
+  qint64 remaining_msec = sleep_timer_remaining_msec_;
+  if (sleep_timer_running_) {
+    remaining_msec = std::max<qint64>(0, remaining_msec - sleep_timer_elapsed_.elapsed());
+  }
+
+  const qint64 total_seconds = (remaining_msec + 999) / 1000;
+  const qint64 hours = total_seconds / 3600;
+  const qint64 minutes = (total_seconds % 3600) / 60;
+  const qint64 seconds = total_seconds % 60;
+  const QString remaining = u"%1:%2:%3"_s.arg(hours).arg(minutes, 2, 10, QLatin1Char('0')).arg(seconds, 2, 10, QLatin1Char('0'));
+  sleep_timer_menu_->setTitle(tr("Sleep timer (%1 remaining)").arg(remaining));
+
 }
 
 void MainWindow::hideEvent(QHideEvent *e) {
